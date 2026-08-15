@@ -816,7 +816,13 @@ class WordMagicApp {
         await this.loadProjectsAndDocuments();
         this.updateStatsUI();
         this.updateFirebaseAuthUI(firebaseService.currentUser);
-        alert('Успешно! Все книги, главы и статистика синхронизированы с Google Cloud Firestore.');
+
+        const unchanged = Math.max(0, result.totalDocs - result.downloadedDocs - result.uploadedDocs);
+        const report = i18n.lang === 'en'
+          ? `Cloud sync completed!\n• Downloaded: ${result.downloadedDocs}\n• Uploaded: ${result.uploadedDocs}\n• Up-to-date: ${unchanged}`
+          : `Синхронизация завершена!\n• Скачано из облака: ${result.downloadedDocs}\n• Отправлено новых: ${result.uploadedDocs}\n• Без изменений: ${unchanged}`;
+
+        alert(report);
       }
     } catch (err) {
       alert(`Ошибка синхронизации с Firebase: ${err.message}`);
@@ -897,14 +903,18 @@ class WordMagicApp {
         storage.saveServerConfig(this.serverConfig);
 
         const timeStr = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-        if (statusText) statusText.textContent = `Синхронизировано в ${timeStr} (Получено глав: ${result.pulledDocs})`;
+        if (statusText) statusText.textContent = `Синхронизировано в ${timeStr} (Скачано: ${result.downloadedDocs}, Отправлено: ${result.uploadedDocs})`;
 
         // Reload data into UI
         await this.loadProjectsAndDocuments();
         this.updateStatsUI();
 
         if (!silent) {
-          alert(`Синхронизация с сервером успешно завершена!\nОбновлено на сервере и локально.`);
+          const unchanged = Math.max(0, result.totalDocs - result.downloadedDocs - result.uploadedDocs);
+          const report = i18n.lang === 'en'
+            ? `Server sync completed!\n• Downloaded: ${result.downloadedDocs}\n• Uploaded: ${result.uploadedDocs}\n• Up-to-date: ${unchanged}`
+            : `Синхронизация с сервером завершена!\n• Скачано: ${result.downloadedDocs}\n• Отправлено: ${result.uploadedDocs}\n• Без изменений: ${unchanged}`;
+          alert(report);
         }
       }
     } catch (e) {

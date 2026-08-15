@@ -169,12 +169,16 @@ class FirebaseService {
       const logsDoc = await getDoc(doc(userRef, 'meta', 'dailyLogs'));
       const remoteDailyLogs = logsDoc.exists() ? (logsDoc.data().logs || {}) : {};
 
-      // 4. Merge Remote -> Local
+      // 4. Merge Remote -> Local (Download only if remote updatedAt > local updatedAt)
+      let downloadedDocs = 0;
+      let downloadedProjects = 0;
+
       const localProjects = storage.getProjects();
       for (const rp of remoteProjects) {
         const lIdx = localProjects.findIndex(p => p.id === rp.id);
         if (lIdx === -1 || (rp.updatedAt || 0) > (localProjects[lIdx].updatedAt || 0)) {
           storage.saveProject(rp);
+          downloadedProjects++;
         }
       }
 
@@ -182,9 +186,11 @@ class FirebaseService {
         const ld = await storage.getDocument(rd.id);
         if (!ld || (rd.updatedAt || 0) > (ld.updatedAt || 0)) {
           await storage.saveDocument(rd);
+          downloadedDocs++;
         }
       }
 
+      // Merge daily logs with timestamp resolution
       if (Object.keys(remoteDailyLogs).length > 0) {
         const localAllLogs = storage.getDailyLogs();
         for (const pId of Object.keys(remoteDailyLogs)) {
@@ -200,43 +206,61 @@ class FirebaseService {
         storage.saveDailyLogs(localAllLogs);
       }
 
-      // 5. Push Local -> Cloud Firestore (batch write)
-      if (onProgress) onProgress('Сохранение изменений в Cloud Firestore...');
+      // 5. Push Local -> Cloud Firestore (Upload ONLY items where local updatedAt > remote updatedAt)
       const allLocalProjects = storage.getProjects();
       const allLocalDocs = await storage.getAllDocuments();
       const allLocalLogs = storage.getDailyLogs();
 
-      const batch = writeBatch(this.db);
-
-      // Save user profile metadata
-      batch.set(userRef, {
-        displayName: this.currentUser.displayName || 'Автор',
-        email: this.currentUser.email || '',
-        lastSync: serverTimestamp()
-      }, { merge: true });
-
-      // Save projects
-      allLocalProjects.forEach(p => {
-        const pRef = doc(projectsCol, p.id);
-        batch.set(pRef, p, { merge: true });
+      const projectsToUpload = allLocalProjects.filter(lp => {
+        const rp = remoteProjects.find(r => r.id === lp.id);
+        return !rp || (lp.updatedAt || 0) > (rp.updatedAt || 0);
       });
 
-      // Save documents
-      allLocalDocs.forEach(d => {
-        const dRef = doc(docsCol, d.id);
-        batch.set(dRef, d, { merge: true });
+      const docsToUpload = allLocalDocs.filter(ld => {
+        const rd = remoteDocs.find(r => r.id === ld.id);
+        return !rd || (ld.updatedAt || 0) > (rd.updatedAt || 0);
       });
 
-      // Save daily logs
-      const logsRef = doc(userRef, 'meta', 'dailyLogs');
-      batch.set(logsRef, { logs: allLocalLogs, updatedAt: Date.now() }, { merge: true });
+      let uploadedProjects = 0;
+      let uploadedDocs = 0;
 
-      await batch.commit();
+      if (projectsToUpload.length > 0 || docsToUpload.length > 0) {
+        if (onProgress) onProgress(`Отправка изменений в облако (Глав: ${docsToUpload.length})...`);
+        const batch = writeBatch(this.db);
+
+        projectsToUpload.forEach(p => {
+          const pRef = doc(projectsCol, p.id);
+          batch.set(pRef, p, { merge: true });
+          uploadedProjects++;
+        });
+
+        docsToUpload.forEach(d => {
+          const dRef = doc(docsCol, d.id);
+          batch.set(dRef, d, { merge: true });
+          uploadedDocs++;
+        });
+
+        // Update daily logs in cloud
+        const logsRef = doc(userRef, 'meta', 'dailyLogs');
+        batch.set(logsRef, { logs: allLocalLogs, updatedAt: Date.now() }, { merge: true });
+
+        // Save user profile metadata
+        batch.set(userRef, {
+          displayName: this.currentUser.displayName || 'Автор',
+          email: this.currentUser.email || '',
+          lastSync: serverTimestamp()
+        }, { merge: true });
+
+        await batch.commit();
+      }
 
       return {
         success: true,
-        pulledDocs: remoteDocs.length,
-        pulledProjects: remoteProjects.length,
+        downloadedDocs,
+        downloadedProjects,
+        uploadedDocs,
+        uploadedProjects,
+        totalDocs: allLocalDocs.length,
         user: this.currentUser
       };
     } catch (err) {
