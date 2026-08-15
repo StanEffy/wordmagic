@@ -26,14 +26,27 @@ import {
 
 import { storage } from './storage.js';
 
-export const firebaseConfig = {
-  apiKey: "AIzaSyABC3WGdIX3f_mC1QXGL7FZlStlsrarz50",
-  authDomain: "writer-95653.firebaseapp.com",
-  projectId: "writer-95653",
-  storageBucket: "writer-95653.firebasestorage.app",
-  messagingSenderId: "483189405263",
-  appId: "1:483189405263:web:0c0b85db4c84bece719c3a"
+// Default / fallback placeholder configuration (safe for public repositories)
+let activeFirebaseConfig = {
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.firebasestorage.app",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:00000000000000"
 };
+
+// Try loading local untracked config
+try {
+  const localModule = await import('./firebase-config.js').catch(() => null);
+  if (localModule && localModule.firebaseConfig) {
+    activeFirebaseConfig = localModule.firebaseConfig;
+  }
+} catch (e) {
+  // Ignored if local config file does not exist
+}
+
+export const firebaseConfig = activeFirebaseConfig;
 
 class FirebaseService {
   constructor() {
@@ -49,6 +62,11 @@ class FirebaseService {
 
   init() {
     try {
+      if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_FIREBASE_API_KEY") {
+        console.log('[Firebase] Режим без внешнего облака (локальное хранилище IndexedDB)');
+        return;
+      }
+
       this.app = initializeApp(firebaseConfig);
       this.auth = getAuth(this.app);
       this.db = getFirestore(this.app);
