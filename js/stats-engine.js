@@ -56,17 +56,18 @@ export class StatsEngine {
   /**
    * Get 7-day history list
    */
-  static getSevenDaySummary(dailyLogs, currentWordCount) {
+  static getSevenDaySummary(dailyLogs, currentWordCount, lang = 'ru') {
     const days = [];
     const today = new Date();
+    const locale = lang === 'en' ? 'en-US' : 'ru-RU';
 
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
       
-      const dayName = d.toLocaleDateString('ru-RU', { weekday: 'short' });
-      const formattedDate = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      const dayName = d.toLocaleDateString(locale, { weekday: 'short' });
+      const formattedDate = d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
 
       let log = dailyLogs[dateStr];
 
@@ -147,6 +148,7 @@ export class StatsEngine {
       dailyPace,
       weeklyVelocity,
       weeks,
+      projectedTotal: weeks[51].words,
       yearEndWords: weeks[51].words
     };
   }
@@ -154,38 +156,35 @@ export class StatsEngine {
   /**
    * Render high-DPI 52-week projection chart on HTML5 Canvas
    */
-  static renderProjectionChart(canvas, projectionData, targetBooks = []) {
+  static renderProjectionChart(canvas, projectionData, targetBooks = [], lang = 'ru') {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
 
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
-
-    const width = rect.width;
-    const height = rect.height;
-    const padding = { top: 30, right: 40, bottom: 40, left: 65 };
 
     ctx.clearRect(0, 0, width, height);
 
-    const weeks = projectionData.weeks;
-    if (!weeks || weeks.length === 0) return;
-
-    const maxWords = Math.max(
-      weeks[weeks.length - 1].words * 1.1,
-      600000 // Ensure War & Peace milestone scale visibility
-    );
-
+    const padding = { top: 25, right: 35, bottom: 35, left: 55 };
     const chartW = width - padding.left - padding.right;
     const chartH = height - padding.top - padding.bottom;
 
-    const getX = (weekIndex) => padding.left + (weekIndex / 51) * chartW;
-    const getY = (words) => padding.top + chartH - (words / maxWords) * chartH;
+    const weeks = projectionData.weeks;
+    const maxWords = Math.max(
+      projectionData.projectedTotal * 1.15,
+      ...targetBooks.filter(b => b.words < projectionData.projectedTotal * 1.4).map(b => b.words),
+      10000
+    );
 
-    // Background Grid lines
-    ctx.strokeStyle = 'rgba(150, 140, 130, 0.15)';
+    const getX = (weekIdx) => padding.left + (weekIdx / 51) * chartW;
+    const getY = (words) => height - padding.bottom - (words / maxWords) * chartH;
+
+    // Grid lines & Y-axis labels
+    ctx.strokeStyle = 'rgba(140, 130, 120, 0.15)';
     ctx.lineWidth = 1;
     ctx.font = '10px "JetBrains Mono", monospace';
     ctx.fillStyle = 'rgba(140, 130, 120, 0.7)';
@@ -208,9 +207,10 @@ export class StatsEngine {
     // X-axis Weeks Marks (Week 1, 13, 26, 39, 52)
     ctx.textAlign = 'center';
     const xMilestones = [1, 13, 26, 39, 52];
+    const weekPrefix = lang === 'en' ? 'wk.' : 'нед.';
     xMilestones.forEach(w => {
       const x = getX(w - 1);
-      ctx.fillText(`нед. ${w}`, x, height - padding.bottom + 18);
+      ctx.fillText(`${weekPrefix} ${w}`, x, height - padding.bottom + 18);
     });
 
     // Milestone Book lines
@@ -227,7 +227,8 @@ export class StatsEngine {
 
         ctx.fillStyle = 'rgba(179, 126, 41, 0.9)';
         ctx.textAlign = 'left';
-        ctx.fillText(`«${book.shortTitle}» (${Math.round(book.words / 1000)}k)`, padding.left + 8, bookY - 4);
+        const bTitle = book.displayShortTitle || book.shortTitle || book.title;
+        ctx.fillText(`«${bTitle}» (${Math.round(book.words / 1000)}k)`, padding.left + 8, bookY - 4);
       }
     });
 
@@ -278,7 +279,8 @@ export class StatsEngine {
     ctx.fillStyle = '#27231e';
     ctx.font = 'bold 11px "JetBrains Mono", monospace';
     ctx.textAlign = 'right';
-    const endText = `~${Math.round(weeks[51].words).toLocaleString()} сл. через год`;
+    const endSuffix = lang === 'en' ? 'words in 1 year' : 'сл. через год';
+    const endText = `~${Math.round(weeks[51].words).toLocaleString()} ${endSuffix}`;
     ctx.fillText(endText, endX, endY - 10);
   }
 }
