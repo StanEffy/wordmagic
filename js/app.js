@@ -10,6 +10,7 @@ import { AcroEngine } from './acro-engine.js';
 import { GitEngine } from './git-engine.js';
 import { SyncEngine } from './sync-engine.js';
 import { firebaseService } from './firebase-service.js';
+import { i18n } from './i18n.js';
 import { ACRO_PRESETS, STARTER_PROSE } from './presets.js';
 
 class WordMagicApp {
@@ -34,6 +35,7 @@ class WordMagicApp {
     this.applySettings();
     this.initEditor();
     this.initAcroStream();
+    this.initLanguage();
     this.bindEvents();
     this.bindModals();
     this.startHeartbeat();
@@ -46,6 +48,23 @@ class WordMagicApp {
     if (this.serverConfig && this.serverConfig.serverUrl && this.serverConfig.autoSync) {
       setTimeout(() => this.handleSyncNow(true), 1500);
     }
+  }
+
+  initLanguage() {
+    const langSelect = document.getElementById('langSelect');
+    if (langSelect) {
+      langSelect.value = i18n.lang;
+      langSelect.addEventListener('change', (e) => {
+        i18n.setLanguage(e.target.value);
+        this.renderDocList();
+        this.updateStatsUI();
+        this.populateAcroModal();
+        if (this.currentDoc) {
+          this.updateMetricsHUD(this.currentDoc.content);
+        }
+      });
+    }
+    i18n.applyToDOM();
   }
 
   startHeartbeat() {
@@ -438,10 +457,12 @@ class WordMagicApp {
 
     // Update Status HUD
     const metrics = StatsEngine.getDetailedMetrics(content);
+    const minSuffix = i18n.lang === 'en' ? 'min' : 'мин';
+    const sentSuffix = i18n.lang === 'en' ? 'w/s' : 'сл/пр';
     this.hudWords.textContent = metrics.words.toLocaleString();
     this.hudChars.textContent = metrics.characters.toLocaleString();
-    this.hudReadingTime.textContent = `${metrics.readingTimeMinutes} мин`;
-    this.hudSentences.textContent = `${metrics.sentences} (${metrics.avgSentenceWords} сл/пр)`;
+    this.hudReadingTime.textContent = `${metrics.readingTimeMinutes} ${minSuffix}`;
+    this.hudSentences.textContent = `${metrics.sentences} (${metrics.avgSentenceWords} ${sentSuffix})`;
 
     // Update Acro-Prose Stream
     if (this.acroConfig.enabled) {
@@ -450,7 +471,7 @@ class WordMagicApp {
 
     if (isInitial) return;
 
-    this.updateSyncStatus('unsaved', 'Изменено...');
+    this.updateSyncStatus('unsaved', i18n.t('status_saving'));
 
     // Debounced Auto-Save
     clearTimeout(this.saveTimeout);
@@ -463,7 +484,7 @@ class WordMagicApp {
         storage.updateDailyWordCount(this.currentProject.id, projectWords);
       }
 
-      this.updateSyncStatus('synced', 'Сохранено');
+      this.updateSyncStatus('synced', i18n.t('status_saved'));
       this.renderDocList();
 
       // Cloud Firestore Auto-Sync (if logged in)
@@ -627,6 +648,7 @@ class WordMagicApp {
   // --- 7-Day Stats & 52-Week Extrapolation Dashboard ---
 
   updateStatsUI() {
+    const lang = i18n.lang;
     const scopeSelect = document.getElementById('statsProjectScopeSelect');
     const isGlobal = scopeSelect && scopeSelect.value === 'all';
     
@@ -639,8 +661,11 @@ class WordMagicApp {
     if (!isGlobal && this.currentProject) {
       totalWords = this.getTotalProjectWords(this.currentProject.id);
       dailyLogs = storage.getDailyLogs(this.currentProject.id);
-      if (scopeBadge) scopeBadge.textContent = `Книга: «${this.currentProject.title}» (${totalWords.toLocaleString()} сл.)`;
-      if (sevenDayTitle) sevenDayTitle.textContent = `Динамика книги «${this.currentProject.title}» за 7 дней`;
+      const scopeText = lang === 'en' ? `Book: "${this.currentProject.title}"` : `Книга: «${this.currentProject.title}»`;
+      if (scopeBadge) scopeBadge.textContent = `${scopeText} (${totalWords.toLocaleString()} ${i18n.t('status_words')})`;
+      if (sevenDayTitle) sevenDayTitle.textContent = lang === 'en' 
+        ? `7-Day Dynamics for "${this.currentProject.title}"` 
+        : `Динамика книги «${this.currentProject.title}» за 7 дней`;
     } else {
       totalWords = this.getTotalAllProjectsWords();
       // Aggregate across all projects
@@ -661,11 +686,14 @@ class WordMagicApp {
           dailyLogs[dateStr].netWords += (pLogs[dateStr].netWords || 0);
         });
       });
-      if (scopeBadge) scopeBadge.textContent = `Все произведения автора (${totalWords.toLocaleString()} сл.)`;
-      if (sevenDayTitle) sevenDayTitle.textContent = `Общая авторская динамика за 7 дней (все книги)`;
+      const allText = lang === 'en' ? 'All Author Manuscripts' : 'Все произведения автора';
+      if (scopeBadge) scopeBadge.textContent = `${allText} (${totalWords.toLocaleString()} ${i18n.t('status_words')})`;
+      if (sevenDayTitle) sevenDayTitle.textContent = lang === 'en' 
+        ? 'All Manuscripts 7-Day Dynamics' 
+        : 'Общая авторская динамика за 7 дней (все книги)';
     }
 
-    const sevenDays = StatsEngine.getSevenDaySummary(dailyLogs, totalWords);
+    const sevenDays = StatsEngine.getSevenDaySummary(dailyLogs, totalWords, lang);
 
     // 1. Render 7-Day Grid
     if (this.sevenDayGrid) {
@@ -678,8 +706,8 @@ class WordMagicApp {
           <div class="day-card-date">${day.formattedDate}</div>
           <div class="day-card-delta ${day.netWords > 0 ? 'positive' : ''}">+${day.netWords.toLocaleString()}</div>
           <div class="day-card-meta">
-            <span>Старт: ${day.startWords.toLocaleString()}</span>
-            <span>Конец: ${day.endWords.toLocaleString()}</span>
+            <span>${i18n.t('day_start')} ${day.startWords.toLocaleString()}</span>
+            <span>${i18n.t('day_end')} ${day.endWords.toLocaleString()}</span>
           </div>
         `;
         this.sevenDayGrid.appendChild(card);
@@ -692,22 +720,24 @@ class WordMagicApp {
     dailyPace = Math.round(dailyPace * multiplier);
 
     if (this.paceMultiplierVal) {
-      this.paceMultiplierVal.textContent = `${dailyPace.toLocaleString()} сл/день`;
+      this.paceMultiplierVal.textContent = `${dailyPace.toLocaleString()} ${i18n.t('pace_words_per_day')}`;
     }
 
     const projection = StatsEngine.get52WeekProjection(totalWords, dailyPace);
 
     // 3. Render 5 Motivational Masterpiece Benchmarks
-    const bookEstimates = BenchmarkCalculator.calculateEstimates(totalWords, dailyPace);
+    const bookEstimates = BenchmarkCalculator.calculateEstimates(totalWords, dailyPace, lang);
     if (this.benchmarksList) {
       this.benchmarksList.innerHTML = '';
       bookEstimates.slice(0, 5).forEach(book => {
         const card = document.createElement('div');
         card.className = 'benchmark-card';
+        const wordsUnit = i18n.t('status_words');
+        const remSuffix = lang === 'en' ? 'remaining' : 'осталось';
         card.innerHTML = `
           <div class="benchmark-info">
-            <div class="benchmark-title">${book.title}</div>
-            <div class="benchmark-author">${book.author} • <span class="benchmark-words">${book.words.toLocaleString()} слов</span></div>
+            <div class="benchmark-title">${book.displayTitle || book.title}</div>
+            <div class="benchmark-author">${book.displayAuthor || book.author} • <span class="benchmark-words">${book.words.toLocaleString()} ${wordsUnit}</span></div>
           </div>
           <div class="benchmark-progress-wrap">
             <div class="benchmark-progress-track">
@@ -716,7 +746,7 @@ class WordMagicApp {
           </div>
           <div class="benchmark-estimate">
             <div class="estimate-time">${book.formattedTime}</div>
-            <div class="estimate-sub">${book.percentage}% (${(book.remainingWords).toLocaleString()} сл. осталось)</div>
+            <div class="estimate-sub">${book.percentage}% (${(book.remainingWords).toLocaleString()} ${wordsUnit} ${remSuffix})</div>
           </div>
         `;
         this.benchmarksList.appendChild(card);
@@ -725,7 +755,7 @@ class WordMagicApp {
 
     // 4. Render 52-Week Projection Canvas Chart
     if (this.extrapolationCanvas) {
-      StatsEngine.renderProjectionChart(this.extrapolationCanvas, projection, bookEstimates.slice(0, 5));
+      StatsEngine.renderProjectionChart(this.extrapolationCanvas, projection, bookEstimates.slice(0, 5), lang);
     }
   }
 

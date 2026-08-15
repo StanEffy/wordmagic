@@ -1,142 +1,133 @@
-# WordMagic — Писательский редактор прозы
+<div align="center">
 
-Специализированный текстовый редактор, созданный для сосредоточенной работы над художественной прозой, отслеживания авторской продуктивности, версионирования и творчества в формате **Акро-прозы**.
+# 🖋️ WordMagic
 
----
+### *The Distraction-Free Prose Editor & Creative Constraint Suite for Serious Writers*
 
-## 🌟 Основные возможности
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platform: Windows | Linux | Web](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20Web-blue.svg)](#-platforms--quick-start)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20External%20NPM-brightgreen.svg)](#)
+[![Offline First](https://img.shields.io/badge/Storage-Offline--First%20IndexedDB-orange.svg)](#)
+[![Cloud Sync](https://img.shields.io/badge/Cloud%20Sync-Firebase%20%2B%20Self--Hosted-purple.svg)](#)
 
-### 1. Писательский дзен-редактор и структура произведений
-- **Управление произведениями (Книгами)**: Возможность вести несколько независимых произведений/романов одновременно. Переключение между книгами в 1 клик через шапку сайдбара.
-- **Иерархическая структура**: Поддержка создания **папок / частей** (например: *«Часть I. Пролог»*, *«Часть II. Зима»*) и вложенных глав.
-- **Компиляция всей книги**: Экспорт монолитной рукописи произведения целиком (со всеми главами и оглавлением) в один файл Markdown (`.md`).
-- **Литературная типографика**: Шрифты *Literata*, *PT Serif*, *Merriweather*, *Inter* и *JetBrains Mono*. Оптимальная длина строки (65–75 знаков), настраиваемый размер шрифта и межстрочный интервал.
-- **Дзен-режим (Alt+Z / 👁️)**: Полноэкранный режим без отвлекающих элементов интерфейса.
-- **Режим печатной машинки (Typewriter Mode)**: Активная строка набора всегда удерживается строго по центру экрана.
-- **Фокус на абзаце**: Мягкое затемнение окружающего текста для глубокой концентрации на текущей мысли.
-- **Темы оформления**:
-  - *Папирус / Крем* (теплая книжная бумага)
-  - *Обсидиан Dark* (глубокая ночная тема для глаз)
-  - *Сепия* (винтажный оттенок классических фолиантов)
-- **Метрики в реальном времени**: Подсчет слов, символов, расчетное время чтения (WPM) и среднее число слов в предложении.
+[**Русский**](#-обзор-на-русском) | [**English**](#-english-overview) | [**Быстрый старт / Quickstart**](#-quick-start) | [**Лицензия / License**](#-license)
 
 ---
 
-### 2. 📊 Статистика за 7 дней, Прогноз на 52 недели и 5 шедевров литературы
-- **Фиксация слов за последние 7 дней**:
-  - Точное количество слов в файле на начало дня (Start of day) и на конец дня (End of day).
-  - Чистая дельта написанного текста за каждый день (`+N` слов).
-- **Экстраполяция темпа на 52 недели (1 год вперёд)**:
-  - Высокоточный интерактивный график прогноза объёма текста на год на базе вашей скорости.
-  - Регулируемый ползунок темпа для моделирования разных сценариев (от расслабленного до писательского спринта).
-- **Шкала 5 великих произведений**:
-  1. **«Властелин колец»** (*Дж. Р. Р. Толкин* — 481 103 слова)
-  2. **«Война и мир»** (*Л. Н. Толстой* — 587 287 слов)
-  3. **«Преступление и наказание»** (*Ф. М. Достоевский* — 211 591 слово)
-  4. **«Мастер и Маргарита»** (*М. А. Булгаков* — 133 000 слов)
-  5. **«Гарри Поттер» (вся сага из 7 книг)** (*Дж. К. Роулинг* — 1 084 170 слов)
-  - Для каждого произведения рассчитывается точный процент готовности и сколько дней/недель понадобилось бы писать книгу такого масштаба при вашем текущем темпе.
+</div>
+
+## 📖 English Overview
+
+**WordMagic** is an open-source, offline-first prose editor engineered specifically for authors, novelists, and creative writers. It unites minimalist aesthetics with analytical productivity tracking, constraint-writing mechanics (*Acro-prose*), and seamless multi-device synchronization.
+
+### ✨ Key Features
+
+- 🧘 **Distraction-Free Zen Writing**: True fullscreen mode (`Alt+Z`), Typewriter scrolling (keeps active line vertically centered), and paragraph-focus dimming.
+- 📊 **7-Day Analytics & 52-Week Forecasting**: Tracks start-of-day and end-of-day word counts per book and projects your annual output across 52 weeks with an interactive high-DPI canvas chart.
+- 🏆 **Canonical Masterpiece Benchmarks**: Live motivational pace comparisons showing your ETA to write *The Lord of the Rings*, *War and Peace*, *Crime and Punishment*, *The Master and Margarita*, and *Harry Potter*.
+- 🔤 **Acro-Prose Prompter (Constraint Writing)**: Real-time tape prompter streaming letter constraints from any source poem or text with phonetic sound equivalence matching and cross-chapter offset tracking.
+- 📚 **Multi-Book & Chapter Hierarchy**: Manage multiple independent manuscripts, nested folders/parts, chapters, and compile entire books into a single Markdown manuscript in 1 click.
+- ☁️ **Dual Cloud & Server Sync**:
+  - **Google Firebase**: Built-in Google Auth & Cloud Firestore real-time database with offline persistence.
+  - **Self-Hosted Sync Server**: Lightweight, zero-dependency Python + SQLite server (`server/server.py`) or Docker container.
+  - **Git & GitHub Integration**: Direct commits and push to GitHub repositories with visual LCS line-by-line diff inspector.
 
 ---
 
-### 3. 🔤 Режим «Акро-проза» и сквозной перенос по главам
-Позволяет писать прозу, в которой начальные буквы слов образуют скрытый текст-источник (акростих в прозе).
-- **Быстрая кнопка источника в ленте (📝)**: Прямо в верхней ленте можно нажать на название источника (или кнопку *«Акро-проза»* в меню) для быстрой вставки любого текста или загрузки файла `.txt` / `.md`.
-- **Сквозной прогресс по всей книге (Cross-Chapter)**:
-  - Если глава 1 закончилась, а текст источника ещё продолжается, глава 2 **автоматически продолжает акро-подсказку со следующей буквы**!
-  - Доступно переключение: *«Сквозной перенос по книге»* или *«Отдельно в каждой главе»*.
-  - В окне источника отображается подробная панель: сколько букв пройдено по всей книге, сколько в текущей главе и сколько осталось до конца произведения.
-- **Побуквенная лента подсказок (Prompter Tape)**:
-  - В реальном времени показывает предыдущие буквы, текущую целевую букву с пульсирующей подсветкой и грядущие буквы источника.
-- **Строгий режим по умолчанию (Default Strict)**:
-  - Мягкий (**Ь**) и твёрдый (**Ъ**) знаки **полностью исключены и игнорируются** в потоке источника.
-  - Буквы **Й ↔ И** взаимозаменяемы.
-  - Буквы **Ё ↔ Е** взаимозаменяемы.
-- **Фонетический режим (Звуковая вариативность)**:
-  - Парные согласные (Б↔П, В↔Ф, Г↔К, Д↔Т, Ж↔Ш, З↔С, Ц↔С, Ч↔Щ).
-  - Редукции гласных (О↔А, Е↔И, Я↔А, Ю↔У).
-- **Интерактивный отклик**: Зеленая/золотая волна подтверждения при точном совпадении начальной буквы слова, счетчик цепочки попаданий (Streak) и процент точности.
-- **Готовые литературные пресеты**: Пушкин, Бродский, Маяковский, Алфавит, Панграммы + загрузка любых файлов с диска.
+## 🇷🇺 Обзор на русском
 
----
+**WordMagic** — это свободный (Open Source, MIT) текстовый редактор с фокусом на литературную прозу, книги и романы. В нём объединены дзен-окружение для писателя, строгая аналитика прогресса по каждому произведению и уникальный тренажёр словесного мастерства (акро-проза).
 
-### 4. 🐙 Git-версионирование и синхронизация с GitHub
-- **Синхронизация с GitHub**:
-  - Прямой коммит и пуш файлов в репозиторий через GitHub Personal Access Token.
-  - Чтение истории коммитов с GitHub прямо в боковом окне.
-- **Встроенное локальное версионирование**:
-  - Создание локальных снапшотов с комментариями и фиксацией объема слов.
-  - Встроенный визуальный **Diff Viewer** (подсветка добавленных строк зеленым, удаленных — красным).
-  - Восстановление / откат к любой предыдущей версии в один клик.
-- **Сохранение на диск**:
-  - Прямое сохранение на жесткий диск через *File System Access API*.
-  - Экспорт в `.md`, `.txt` и копирование в буфер обмена.
+### 🌟 Основные возможности
 
----
-
-## 🚀 Запуск программы
-
-### 🪟 Windows: Исполняемый файл `.exe`
-- Запустите **[`WordMagic.exe`](file:///c:/Users/User/Documents/projects/wordmagic/WordMagic.exe)** (или файл-дублёр `Запустить-WordMagic.bat`).
-- Открывает WordMagic в виде **нативного отдельного окна приложения** (без рамок браузера, вкладок и адресных строк).
-
-### 🐧 Ubuntu / Debian / Linux: Нативное приложение
-В проекте предусмотрен готовый лаунчер и установщик для Linux:
-
-1. **Быстрый запуск из папки**:
-   ```bash
-   chmod +x wordmagic-linux.sh
-   ./wordmagic-linux.sh
-   ```
-   *Скрипт автоматически найдет Chrome, Chromium или Edge и запустит WordMagic в виде отдельного окна приложения.*
-
-2. **Установка в главное меню Ubuntu (Gnome Dash / Applications)**:
-   ```bash
-   chmod +x install-ubuntu.sh
-   ./install-ubuntu.sh
-   ```
-   *После этого приложение появится в меню программ Ubuntu с иконкой и будет запускаться в 1 клик.*
-
----
-
-## ☁️ Собственный сервер синхронизации (WordMagic Sync Server)
-
-Для синхронизации рукописей, глав, истории ревизий и 7-дневной статистики между вашим **ПК на Windows**, **ноутбуком на Ubuntu** и любыми другими устройствами создан легковесный сервер на базе Python + SQLite (без сторонних зависимостей).
-
-### 1. Как запустить сервер (на VPS, Ubuntu сервере или локально):
-
-**Вариант A: Через Python (Мгновенно)**:
-```bash
-cd server
-python3 server.py --port 8080 --key "ваш_секретный_ключ"
-```
-
-**Вариант B: Через Docker Compose**:
-```bash
-cd server
-docker compose up -d
-```
-
-**Вариант C: Как системная служба Ubuntu (Systemd)**:
-```bash
-sudo cp server/wordmagic-server.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now wordmagic-server
-```
-
-### 2. Как подключить синхронизацию в приложении:
-1. В левой панели нажмите **`🐙 / ☁️ Git & Синхронизация`**.
-2. В блоке **«Свой сервер синхронизации»** укажите:
-   - **URL сервера**: например `http://192.168.1.100:8080` или `https://sync.myprose.com`
-   - **Ключ доступа**: ваш секретный ключ (если задан)
-3. Нажмите **`🔄 Синхронизировать сейчас`** (или включите галочку *«Автоматическая фоновая синхронизация»*).
-
----
-
-## ⌨️ Горячие клавиши
-
-| Сочетание клавиш | Действие |
+| Раздел | Возможности |
 | --- | --- |
-| `Ctrl + S` / `Cmd + S` | Ручное сохранение и создание снапшота |
-| `Alt + Z` | Включить / выключить Дзен-режим (Zen Mode) |
-| `Tab` | Умный писательский отступ строки |
+| ✍️ **Дзен-писательство** | Полноэкранный режим `Alt+Z`, центрирование строки (Typewriter scrolling), фокус на текущем абзаце, книжная типографика (*Literata*, *PT Serif*, *Merriweather*). |
+| 📊 **7-дневная аналитика** | Точный подсчёт слов литературного стандарта (слова через дефис как одно слово, знаки препинания игнорируются). Учет стартового и конечного объема дня **раздельно для каждого произведения**. |
+| 📈 **Экстраполяция на 52 недели** | Проекция темпа на год вперёд на интерактивном графике с интерактивным регулятором темпа. |
+| 🏛️ **5 литературных эталонов** | Сравнение прогресса с шедеврами классики: *«Властелин колец»*, *«Война и мир»*, *«Преступление и наказание»*, *«Мастер и Маргарита»*, *«Гарри Поттер»*. |
+| 🎭 **Режим Акро-прозы** | Лента-подсказчик буквенных ограничений из поэтических текстов, строгий режим (без Ь/Ъ, Й=И, Ё=Е), фонетическое соответствие согласных/гласных и сквозной перенос прогресса между главами. |
+| 📚 **Книги и структура глав** | Неограниченное количество произведений, папки/части, главы и экспорт всей книги в единый Markdown-файл. |
+| ☁️ **Облако и синхронизация** | Официальный **Google Firebase** (Google Auth + Cloud Firestore), собственный автономный **Python/Docker сервер** и прямое версионирование в **GitHub**. |
+
+---
+
+## 🚀 Quick Start / Быстрый запуск
+
+### 🪟 Windows (Standalone `.exe`)
+Дважды кликните по файлу **[`WordMagic.exe`](file:///c:/Users/User/Documents/projects/wordmagic/WordMagic.exe)**:
+- Запускается как автономное нативное окно без рамок браузера и адресных строк.
+- Вшитая иконка в окне, проводнике и системном трее Windows.
+
+```powershell
+# Запуск через готовый exe:
+.\WordMagic.exe
+```
+
+### 🐧 Ubuntu / Debian / Linux
+В репозитории есть готовые лаунчер и системный установщик:
+
+```bash
+# 1. Запуск из папки:
+chmod +x wordmagic-linux.sh
+./wordmagic-linux.sh
+
+# 2. Установка в главное меню Ubuntu (Gnome Dash):
+chmod +x install-ubuntu.sh
+./install-ubuntu.sh
+```
+
+### 🌐 Web Browser / Python
+```bash
+python3 -m http.server 8080
+# Open in browser: http://localhost:8080
+```
+
+---
+
+## ☁️ Cloud & Sync Options / Варианты синхронизации
+
+```
+                  ┌───────────────────────────────┐
+                  │      WordMagic Editor         │
+                  │   (Windows / Linux / Web)     │
+                  └──────────────┬────────────────┘
+                                 │
+         ┌───────────────────────┼───────────────────────┐
+         ▼                       ▼                       ▼
+ ┌───────────────┐       ┌───────────────┐       ┌───────────────┐
+ │   Firebase    │       │  Sync Server  │       │    GitHub     │
+ │ Firestore DB  │       │ Python/Docker │       │  REST Commit  │
+ │  Google Auth  │       │  SQLite Sync  │       │   LCS Diffs   │
+ └───────────────┘       └───────────────┘       └───────────────┘
+```
+
+1. **Google Firebase (Cloud Firestore)**:
+   - Нажмите **`🔥 Войти в Облако`** в шапке программы и войдите через Google в 1 клик.
+   - Все тексты, книги и 7-дневная статистика синхронизируются в базу данных Cloud Firestore.
+2. **Собственный Sync Server (Python / Docker)**:
+   ```bash
+   cd server
+   python3 server.py --port 8080 --key "my_secret_key"
+   # Или через Docker:
+   docker compose up -d
+   ```
+3. **GitHub Git Sync**:
+   - Укажите Personal Access Token и репозиторий `username/repo` для прямого пуша глав с просмотром визуальных диффов.
+
+---
+
+## ⌨️ Hotkeys / Горячие клавиши
+
+| Keybinding | Action (EN) | Действие (RU) |
+| --- | --- | --- |
+| `Alt + Z` | Toggle Zen Fullscreen Mode | Полноэкранный Дзен-режим |
+| `Ctrl + S` / `Cmd + S` | Save & Snapshot Revision | Сохранить и создать ревизию |
+| `Tab` | Smart Literary Indentation | Умный писательский отступ |
+| `Esc` | Close active modal | Закрыть модальное окно |
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details. Free for personal, commercial, and open-source use.

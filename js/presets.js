@@ -68,6 +68,42 @@ export const ACRO_PRESETS = [
     title: 'Классическая панграмма',
     category: 'Упражнение',
     text: `В чащах юга жил бы цитрус? Да, но фальшивый экземпляр!`
+  },
+  {
+    id: 'shakespeare-sonnet18',
+    title: 'William Shakespeare — Sonnet 18',
+    category: 'Poetry (EN)',
+    text: `Shall I compare thee to a summer's day?
+Thou art more lovely and more temperate:
+Rough winds do shake the darling buds of May,
+And summer's lease hath all too short a date:
+Sometime too hot the eye of heaven shines,
+And often is his gold complexion dimm'd;
+And every fair from fair sometime declines,
+By chance, or nature's changing course, untrimm'd;
+But thy eternal summer shall not fade,
+Nor lose possession of that fair thou ow'st;
+Nor shall death brag thou wand'rest in his shade,
+When in eternal lines to Time thou grow'st:
+So long as men can breathe, or eyes can see,
+So long lives this, and this gives life to thee.`
+  },
+  {
+    id: 'poe-raven',
+    title: 'Edgar Allan Poe — The Raven',
+    category: 'Poetry (EN)',
+    text: `Once upon a midnight dreary, while I pondered, weak and weary,
+Over many a quaint and curious volume of forgotten lore—
+While I nodded, nearly napping, suddenly there came a tapping,
+As of some one gently rapping, rapping at my chamber door.
+“’Tis some visitor,” I muttered, “tapping at my chamber door—
+Only this and nothing more.”`
+  },
+  {
+    id: 'english-alphabet',
+    title: 'English Alphabet (A — Z)',
+    category: 'Exercise (EN)',
+    text: `A B C D E F G H I J K L M N O P Q R S T U V W X Y Z`
   }
 ];
 
