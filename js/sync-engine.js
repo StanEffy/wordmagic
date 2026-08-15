@@ -79,6 +79,8 @@ export class SyncEngine {
 
     // 2. Apply remote changes locally (if newer)
     if (onProgress) onProgress('Слияние данных...');
+    let downloadedProjects = 0;
+    let downloadedDocs = 0;
     
     // Merge projects
     const localProjects = storage.getProjects();
@@ -86,6 +88,7 @@ export class SyncEngine {
       const localIdx = localProjects.findIndex(p => p.id === rProj.id);
       if (localIdx === -1 || (rProj.updatedAt || 0) > (localProjects[localIdx].updatedAt || 0)) {
         storage.saveProject(rProj);
+        downloadedProjects++;
       }
     }
 
@@ -94,6 +97,7 @@ export class SyncEngine {
       const localDoc = await storage.getDocument(rDoc.id);
       if (!localDoc || (rDoc.updatedAt || 0) > (localDoc.updatedAt || 0)) {
         await storage.saveDocument(rDoc);
+        downloadedDocs++;
       }
     }
 
@@ -113,41 +117,61 @@ export class SyncEngine {
       storage.saveDailyLogs(localAllLogs);
     }
 
-    // 3. Push local changes to server
-    if (onProgress) onProgress('Отправка локальных изменений...');
-    
+    // 3. Push local changes to server (Upload ONLY items modified locally)
     const allLocalProjects = storage.getProjects();
     const allLocalDocs = await storage.getAllDocuments();
     const allLocalLogs = storage.getDailyLogs();
 
-    const pushPayload = {
-      clientTime: Date.now(),
-      projects: allLocalProjects,
-      documents: allLocalDocs,
-      dailyLogs: allLocalLogs
-    };
+    const projectsToUpload = allLocalProjects.filter(lp => {
+      const rp = remoteProjects.find(r => r.id === lp.id);
+      return !rp || (lp.updatedAt || 0) > (rp.updatedAt || 0);
+    });
 
-    try {
-      const pushRes = await fetch(`${cleanUrl}/api/sync/push`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(pushPayload)
-      });
+    const docsToUpload = allLocalDocs.filter(ld => {
+      const rd = remoteDocs.find(r => r.id === ld.id);
+      return !rd || (ld.updatedAt || 0) > (rd.updatedAt || 0);
+    });
 
-      if (!pushRes.ok) {
-        const errJson = await pushRes.json().catch(() => ({}));
-        throw new Error(errJson.error || `Ошибка отправки: ${pushRes.status}`);
-      }
+    let uploadedDocs = docsToUpload.length;
+    let uploadedProjects = projectsToUpload.length;
 
-      const pushData = await pushRes.json();
-      return {
-        success: true,
-        serverTime: pushData.serverTime || serverTime,
-        pulledDocs: remoteDocs.length,
-        pulledProjects: remoteProjects.length
+    if (projectsToUpload.length > 0 || docsToUpload.length > 0) {
+      if (onProgress) onProgress(`Отправка измененных глав на сервер (${docsToUpload.length})...`);
+      
+      const pushPayload = {
+        clientTime: Date.now(),
+        projects: projectsToUpload,
+        documents: docsToUpload,
+        dailyLogs: allLocalLogs
       };
-    } catch (e) {
-      throw new Error(`Ошибка отправки на сервер: ${e.message}`);
+
+      try {
+        const pushRes = await fetch(`${cleanUrl}/api/sync/push`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(pushPayload)
+        });
+
+        if (!pushRes.ok) {
+          const errJson = await pushRes.json().catch(() => ({}));
+          throw new Error(errJson.error || `Ошибка отправки: ${pushRes.status}`);
+        }
+
+        const pushData = await pushRes.json();
+        serverTime = pushData.serverTime || serverTime;
+      } catch (e) {
+        throw new Error(`Ошибка отправки на сервер: ${e.message}`);
+      }
     }
+
+    return {
+      success: true,
+      serverTime: serverTime,
+      downloadedDocs,
+      downloadedProjects,
+      uploadedDocs,
+      uploadedProjects,
+      totalDocs: allLocalDocs.length
+    };
   }
 }

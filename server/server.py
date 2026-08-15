@@ -15,6 +15,22 @@ import time
 import argparse
 from urllib.parse import urlparse, parse_qs
 
+def load_env_file():
+    for candidate in ['.env', 'server/.env', '../.env']:
+        if os.path.isfile(candidate):
+            try:
+                with open(candidate, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#') and '=' in line:
+                            k, v = line.split('=', 1)
+                            os.environ.setdefault(k.strip(), v.strip().strip('"\''))
+                break
+            except Exception:
+                pass
+
+load_env_file()
+
 DB_FILE = os.environ.get('WORDMAGIC_DB', 'wordmagic_server.db')
 AUTH_KEY = os.environ.get('WORDMAGIC_KEY', '')
 
