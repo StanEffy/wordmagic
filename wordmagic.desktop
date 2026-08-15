@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=WordMagic
+GenericName=Prose Text Editor
+Comment=Специализированный редактор для прозы с акро-прозой, 7-дневной аналитикой и синхронизацией
+Exec=/bin/bash -c "cd %k/.. && ./wordmagic-linux.sh"
+Icon=icon
+Terminal=false
+Categories=Office;WordProcessor;TextEditor;
+StartupNotify=true
+StartupWMClass=WordMagic

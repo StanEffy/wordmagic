@@ -1,0 +1,56 @@
+# ==========================================
+# WordMagic Git Ignore Rules
+# ==========================================
+
+# Database & Sync Files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+wordmagic_server.db
+data/
+server/data/
+
+# Logs and runtime data
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment and Secret configs
+.env
+.env.local
+.env.*.local
+*.secret
+secrets.json
+
+# Temporary & Cache files
+tmp/
+temp/
+*profile*
+.cache/
+
+# OS and Editor Specific Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE & Editor Directories
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosv
+*.sln.docstates
+
+# Windows .NET build artifacts (keep WordMagic.exe and icon assets)
+*.obj
+*.pdb
+*.ilk

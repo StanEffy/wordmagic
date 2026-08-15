@@ -1,0 +1,200 @@
+/* ==========================================================================
+   WordMagic Prose Editor - Git Versioning, GitHub Sync & Diff Viewer
+   ========================================================================== */
+
+.git-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* GitHub Credentials & Connection Card */
+.git-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.git-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.git-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.git-input-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.git-text-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  outline: none;
+}
+
+.git-text-input:focus {
+  border-color: var(--accent-primary);
+  background: var(--bg-surface);
+}
+
+/* Commit Creator Form */
+.commit-box {
+  display: flex;
+  gap: 8px;
+}
+
+.commit-msg-input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.commit-msg-input:focus {
+  border-color: var(--accent-primary);
+}
+
+/* Timeline of Commits / Snapshots */
+.git-timeline {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.timeline-entry {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.timeline-entry:hover {
+  background: var(--bg-surface);
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-sm);
+}
+
+.timeline-entry.active {
+  border-color: var(--accent-primary);
+  background: var(--bg-surface);
+}
+
+.timeline-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timeline-commit-msg {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+.timeline-badge {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  background: var(--bg-hover);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+
+.timeline-entry-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.timeline-words-count {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+.timeline-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Diff Visualizer */
+.diff-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  max-height: 340px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.diff-line-add {
+  background-color: rgba(44, 110, 73, 0.15);
+  color: var(--accent-green);
+  display: block;
+  padding: 1px 4px;
+  border-left: 3px solid var(--accent-green);
+  margin-bottom: 2px;
+}
+
+.diff-line-del {
+  background-color: rgba(138, 59, 41, 0.15);
+  color: var(--accent-primary);
+  display: block;
+  padding: 1px 4px;
+  border-left: 3px solid var(--accent-primary);
+  text-decoration: line-through;
+  margin-bottom: 2px;
+}
+
+.diff-line-same {
+  color: var(--text-secondary);
+  display: block;
+  padding: 1px 4px;
+}
+
+.diff-empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 20px;
+}

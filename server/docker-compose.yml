@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  wordmagic-server:
+    build: .
+    container_name: wordmagic-sync-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - WORDMAGIC_KEY=change_this_secret_key
+      - WORDMAGIC_DB=/data/wordmagic_server.db
+    volumes:
+      - ./data:/data

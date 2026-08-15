@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="paper">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WordMagic — Писательский редактор прозы</title>
+  <meta name="description" content="Специализированный текстовый редактор для прозы с 7-дневной аналитикой, 52-недельной экстраполяцией, шкалой шедевров, режимом акро-прозы и версионированием в Git.">
+
+  <!-- Application Icons & Favicons -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <!-- Google Fonts: Literata, Playfair Display, PT Serif, Merriweather, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/editor.css">
+  <link rel="stylesheet" href="css/stats.css">
+  <link rel="stylesheet" href="css/acro.css">
+  <link rel="stylesheet" href="css/git-sync.css">
+</head>
+<body class="font-literata size-md width-standard">
+
+  <div id="app">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-header-top">
+          <div class="brand-title">
+            <img src="icon.png" alt="WordMagic" style="width: 24px; height: 24px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+            <span>WordMagic</span>
+          </div>
+          <button class="btn btn-ghost btn-icon" id="openProjectsModalBtn" title="Управление произведениями и книгами">📚</button>
+        </div>
+
+        <!-- Current Book / Project Selector -->
+        <div class="project-switcher" id="projectSwitcherBtn" title="Нажмите для смены произведения или создания нового">
+          <div class="project-switcher-info">
+            <span class="project-switcher-label">Произведение</span>
+            <span class="project-current-title" id="projectCurrentTitle">Роман I (Основная рукопись)</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">▾</span>
+        </div>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- Document Chapters Section -->
+        <div>
+          <div class="sidebar-section-title">
+            <span>Главы и Структура</span>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-ghost" id="newFolderBtn" style="padding: 2px 6px; font-size: 0.72rem;" title="Создать папку / Часть">+ Папка</button>
+              <button class="btn btn-primary" id="newDocBtn" style="padding: 2px 8px; font-size: 0.72rem;" title="Создать новую главу">+ Глава</button>
+            </div>
+          </div>
+          <ul class="doc-list" id="docList">
+            <!-- Rendered by JS -->
+          </ul>
+        </div>
+
+        <!-- Quick Access Navigation -->
+        <div>
+          <div class="sidebar-section-title">Инструменты</div>
+          <nav class="nav-menu">
+            <button class="nav-btn" id="openStatsBtn">
+              <span class="icon">📊</span>
+              <span>7 дней и Прогноз на год</span>
+            </button>
+            <button class="nav-btn" id="openAcroModalBtn">
+              <span class="icon">🔤</span>
+              <span>Режим «Акро-проза»</span>
+            </button>
+            <button class="nav-btn" id="openGitBtn">
+              <span class="icon">🐙</span>
+              <span>Git & GitHub Версии</span>
+            </button>
+            <button class="nav-btn" id="openExportBtn">
+              <span class="icon">💾</span>
+              <span>Сохранить на диск / Экспорт</span>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Writing Stage -->
+    <main class="main-stage">
+      <!-- Top Application Header -->
+      <header class="top-header" id="topHeader">
+        <div class="header-left">
+          <button class="btn btn-ghost btn-icon" id="toggleSidebarBtn" title="Скрыть/показать меню">☰</button>
+          <input type="text" class="doc-title-input" id="docTitleInput" placeholder="Название главы..." value="Глава I">
+          
+          <div class="status-pill" id="syncStatusPill">
+            <span class="status-dot synced" id="syncStatusDot"></span>
+            <span id="syncStatusText">Сохранено</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Acro Ribbon Quick Toggle -->
+          <button class="btn btn-ghost" id="toggleAcroRibbonBtn" title="Включить/выключить подсказку Акро-прозы">
+            <span>🔤</span>
+            <span>Акро-подсказка</span>
+          </button>
+
+          <!-- Theme & Font Settings -->
+          <select class="btn btn-ghost" id="themeSelect" title="Тема оформления">
+            <option value="paper">Папирус</option>
+            <option value="dark">Обсидиан Dark</option>
+            <option value="sepia">Сепия</option>
+          </select>
+
+          <select class="btn btn-ghost" id="fontSelect" title="Шрифт текста">
+            <option value="literata">Literata</option>
+            <option value="ptserif">PT Serif</option>
+            <option value="merriweather">Merriweather</option>
+            <option value="inter">Inter (Sans)</option>
+            <option value="mono">JetBrains Mono</option>
+          </select>
+
+          <!-- Firebase Cloud Account Button -->
+          <button class="btn btn-ghost" id="firebaseAuthHeaderBtn" title="Синхронизация с аккаунтом Firebase">
+            <span id="firebaseHeaderIcon">🔥</span>
+            <span id="firebaseHeaderLabel">Войти в Облако</span>
+          </button>
+
+          <!-- Zen Mode Button -->
+          <button class="btn btn-primary btn-pill" id="zenToggleBtn" title="Полноэкранный Дзен-режим (Alt+Z)">
+            <span>👁️</span>
+            <span>Дзен</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Acro-Prose Top Ribbon (Prompter tape) -->
+      <div class="acro-ribbon-bar" id="acroRibbon">
+        <div class="acro-ribbon-left">
+          <button class="btn btn-ghost btn-sm acro-badge" id="acroSourceQuickBtn" title="Нажмите, чтобы загрузить или сменить текст-источник">
+            <span>📝</span>
+            <span id="acroSourceBadgeTitle">Источник: «Я помню чудное...»</span>
+          </button>
+          <div class="acro-mode-pill strict" id="acroModePill" title="Нажмите для переключения режима">
+            <span class="icon">🔒</span> Строгий (без Ь/Ъ, Й=И, Ё=Е)
+          </div>
+        </div>
+
+        <!-- Dynamic Letter Tape -->
+        <div class="acro-tape-container">
+          <div class="acro-letter-track" id="acroLetterTrack">
+            <!-- Letters injected by AcroEngine -->
+          </div>
+        </div>
+
+        <div class="acro-ribbon-right">
+          <div class="acro-streak-badge" id="acroStreakVal">🔥 0 подряд (100%)</div>
+          <span class="status-pill" id="acroProgressPill" style="cursor: pointer;" title="Прогресс по тексту-источнику">0 / 0</span>
+        </div>
+      </div>
+
+      <!-- Editor Viewport -->
+      <div class="editor-viewport" id="editorViewport">
+        <div class="editor-paper">
+          <textarea 
+            id="proseEditor" 
+            class="prose-content" 
+            placeholder="Начните писать вашу прозу здесь..."
+            spellcheck="true"
+            autocomplete="off"
+            autocorrect="on"
+            autocapitalize="sentences"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Zen Mode Exit Trigger -->
+      <button class="zen-exit-btn" id="zenExitBtn">✕ Выйти из Дзен-режима</button>
+
+      <!-- Floating Controls Pill -->
+      <div class="editor-floating-controls">
+        <button class="tool-toggle-btn" id="toolTypewriter" title="Печатная машинка (каретка по центру)">
+          <span>⌨️</span> <span>Машинка</span>
+        </button>
+        <button class="tool-toggle-btn" id="toolFocus" title="Фокус на активном абзаце">
+          <span>🎯</span> <span>Фокус</span>
+        </button>
+      </div>
+
+      <!-- Status HUD Metrics -->
+      <footer class="editor-status-hud" id="statusHud">
+        <div class="hud-metric">
+          <span>Слов:</span>
+          <strong id="hudWords">0</strong>
+        </div>
+        <div class="hud-divider"></div>
+        <div class="hud-metric">
+          <span>Символов:</span>
+          <strong id="hudChars">0</strong>
+        </div>
+        <div class="hud-divider"></div>
+        <div class="hud-metric">
+          <span>Чтение:</span>
+          <strong id="hudReadingTime">0 мин</strong>
+        </div>
+        <div class="hud-divider"></div>
+        <div class="hud-metric">
+          <span>Предложений:</span>
+          <strong id="hudSentences">0</strong>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 1: 7-Day Statistics, 52-Week Extrapolation & 5 Masterpiece Benchmarks
+       ========================================================================= -->
+  <div class="modal-backdrop" id="statsModal">
+    <div class="modal-container" style="max-width: 920px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <h2 class="modal-title" style="margin: 0;">📊 Аналитика и Прогноз на 52 недели</h2>
+          <select id="statsProjectScopeSelect" class="btn btn-ghost" style="border: 1px solid var(--border-medium); font-size: 0.82rem; font-weight: 600;">
+            <option value="current" selected>📖 Текущее произведение</option>
+            <option value="all">🌐 Все произведения суммарно</option>
+          </select>
+        </div>
+        <button class="btn btn-ghost btn-icon modal-close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="stats-dashboard">
+          
+          <!-- Word Counting Rules Explanation Note -->
+          <div style="background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 0.78rem; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">
+            <span>ℹ️ <strong>Стандарт подсчёта слов:</strong> дефисные слова (например, <em>«как-нибудь»</em>) считаются за 1 слово; знаки препинания, тире и кавычки не увеличивают счётчик.</span>
+            <span id="statsScopeBadge" style="font-family: var(--font-mono); font-weight: 600; color: var(--accent-primary);">Роман I</span>
+          </div>
+
+          <!-- 1. 7-Day Word Progress -->
+          <div class="seven-day-section">
+            <div class="section-headline">
+              <div>
+                <h3 id="sevenDayTitle">Динамика последних 7 дней</h3>
+                <div class="section-subtitle">Слова на начало дня, конец дня и чистый суточный прирост текста</div>
+              </div>
+            </div>
+            <div class="seven-day-grid" id="sevenDayGrid">
+              <!-- Rendered by StatsEngine -->
+            </div>
+          </div>
+
+          <!-- 2. 52-Week Extrapolation Chart -->
+          <div class="extrapolation-section">
+            <div class="chart-header">
+              <div>
+                <h3>Экстраполяция на 52 недели (1 год вперёд)</h3>
+                <div class="section-subtitle">Прогноз накопительного объёма прозы при сохранении темпа</div>
+              </div>
+              <div class="chart-controls">
+                <div class="pace-slider-wrapper">
+                  <span>Темп:</span>
+                  <input type="range" class="pace-slider" id="paceMultiplierSlider" min="0.5" max="3.0" step="0.1" value="1.0">
+                  <span class="chart-summary-badge" id="paceMultiplierVal">500 сл/день</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-container">
+              <canvas id="extrapolationCanvas"></canvas>
+            </div>
+          </div>
+
+          <!-- 3. 5 Literary Masterpieces Shelf -->
+          <div class="benchmarks-section">
+            <div class="section-headline">
+              <div>
+                <h3>Шкала 5 великих произведений</h3>
+                <div class="section-subtitle">Сколько понадобилось бы писать шедевры мировой прозы при вашей текущей скорости</div>
+              </div>
+            </div>
+            <div class="benchmarks-list" id="benchmarksList">
+              <!-- Rendered by BenchmarksCalculator -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary modal-close-btn">Закрыть аналитику</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: Acro-Prose Configuration & Source Text Loader
+       ========================================================================= -->
+  <div class="modal-backdrop" id="acroModal">
+    <div class="modal-container" style="max-width: 820px;">
+      <div class="modal-header">
+        <h2 class="modal-title">🔤 Управление режимом «Акро-проза» и текстом-источником</h2>
+        <button class="btn btn-ghost btn-icon modal-close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          
+          <!-- Live Cross-Chapter Progress Box -->
+          <div class="acro-rule-box" style="background: var(--bg-surface); border: 1px solid var(--accent-primary); box-shadow: var(--shadow-sm);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong style="font-size:0.92rem; color:var(--accent-primary); display:flex; align-items:center; gap:6px;">
+                <span>📈 Прогресс прохождения источника:</span>
+                <span id="acroModalTitleDisplay">«Я помню чудное мгновенье»</span>
+              </strong>
+              <span class="status-pill" id="acroModalPercentDisplay">0%</span>
+            </div>
+            <div class="benchmark-progress-track" style="margin-bottom:8px;">
+              <div class="benchmark-progress-fill" id="acroModalProgressFill" style="width: 0%;"></div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; font-size:0.78rem; text-align:center;">
+              <div style="background:var(--bg-secondary); padding:6px; border-radius:var(--radius-sm);">
+                <div style="color:var(--text-muted);">Всего в источнике</div>
+                <strong id="acroStatTotal" style="font-family:var(--font-mono); font-size:0.95rem;">0</strong> букв
+              </div>
+              <div style="background:var(--bg-secondary); padding:6px; border-radius:var(--radius-sm);">
+                <div style="color:var(--text-muted);">Пройдено по книге</div>
+                <strong id="acroStatProjectDone" style="font-family:var(--font-mono); font-size:0.95rem; color:var(--accent-primary);">0</strong>
+              </div>
+              <div style="background:var(--bg-secondary); padding:6px; border-radius:var(--radius-sm);">
+                <div style="color:var(--text-muted);">В этой главе</div>
+                <strong id="acroStatChapterDone" style="font-family:var(--font-mono); font-size:0.95rem; color:var(--accent-green);">0</strong>
+              </div>
+              <div style="background:var(--bg-secondary); padding:6px; border-radius:var(--radius-sm);">
+                <div style="color:var(--text-muted);">Осталось написать</div>
+                <strong id="acroStatRemaining" style="font-family:var(--font-mono); font-size:0.95rem; color:var(--accent-gold);">0</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Source Text Input Area -->
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label style="font-size:0.85rem; font-weight:600; color:var(--text-primary);">
+                Текст-источник для акро-последовательности:
+              </label>
+              <input type="file" id="acroFileInput" accept=".txt,.md" style="display:none;">
+              <button class="btn btn-ghost btn-sm" id="acroUploadFileBtn" style="font-size:0.75rem;">📁 Загрузить файл (.txt / .md)</button>
+            </div>
+            <textarea id="acroSourceInput" class="source-textarea" placeholder="Вставьте стихотворение, речь, поэму, алфавит или любой текст произвольного размера..."></textarea>
+          </div>
+
+          <!-- Literary Presets -->
+          <div>
+            <span style="font-size:0.78rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
+              Готовые литературные пресеты:
+            </span>
+            <div id="acroPresetsList" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+              <!-- Preset buttons -->
+            </div>
+          </div>
+
+          <!-- Scope & Rules Configuration -->
+          <div class="acro-modal-rules-grid">
+            <div class="acro-rule-box">
+              <div class="acro-rule-title">
+                <span>Область отслеживания</span>
+                <select id="acroScopeSelect" class="btn btn-ghost" style="padding:2px 8px; font-size:0.8rem;">
+                  <option value="project" selected>Сквозной перенос по книге (Рекомендуется)</option>
+                  <option value="chapter">Отдельно в каждой главе</option>
+                </select>
+              </div>
+              <div class="acro-rule-desc">
+                <strong>Сквозной перенос:</strong> если первая глава закончилась, а текст источника ещё нет, вторая глава автоматически продолжит акро-подсказку со следующей буквы!
+              </div>
+            </div>
+
+            <div class="acro-rule-box">
+              <div class="acro-rule-title">
+                <span>Режим сопоставления</span>
+                <select id="acroModeSelect" class="btn btn-ghost" style="padding:2px 8px; font-size:0.8rem;">
+                  <option value="strict" selected>Строгий (По умолчанию)</option>
+                  <option value="phonetic">Фонетический (Звуки)</option>
+                </select>
+              </div>
+              <div class="acro-rule-desc">
+                <strong>По дефолту:</strong> знаки <strong>Ь</strong> и <strong>Ъ</strong> полностью отсутствуют в потоке, а буквы <strong>Й ↔ И</strong> и <strong>Ё ↔ Е</strong> взаимозаменяемы.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost modal-close-btn">Отмена</button>
+        <button class="btn btn-primary" id="saveAcroSettingsBtn">Применить источник и правила</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 3: Git Versioning, Cloud Sync & Firebase
+       ========================================================================= -->
+  <div class="modal-backdrop" id="gitModal">
+    <div class="modal-container" style="max-width: 880px;">
+      <div class="modal-header">
+        <h2 class="modal-title">☁️ Облачная синхронизация (Firebase, Сервер, Git)</h2>
+        <button class="btn btn-ghost btn-icon modal-close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="git-panel">
+          
+          <!-- Official Firebase Cloud Integration Card -->
+          <div class="git-card" style="border: 2px solid #f58220; background: var(--bg-surface); box-shadow: var(--shadow-sm);">
+            <div class="git-card-title">
+              <span style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.3rem;">🔥</span>
+                <strong style="color:#d46b08;">Google Firebase Cloud (Проект: writer-95653)</strong>
+              </span>
+              <div id="firebaseAuthControls" style="display:flex; gap:8px; align-items:center;">
+                <!-- Buttons injected by JS -->
+                <button class="btn btn-primary btn-sm" id="firebaseGoogleLoginBtn" style="background:#4285f4; border-color:#4285f4; font-size:0.78rem;">
+                  <span>🌐</span> Войти через Google
+                </button>
+                <button class="btn btn-ghost btn-sm" id="firebaseGuestLoginBtn" style="font-size:0.78rem;">
+                  <span>👤</span> Гостевой вход
+                </button>
+              </div>
+            </div>
+            
+            <div id="firebaseUserInfoBanner" style="font-size:0.82rem; color:var(--text-secondary); display:flex; justify-content:space-between; align-items:center; background:var(--bg-secondary); padding:8px 12px; border-radius:var(--radius-sm); margin-top:4px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="status-dot" id="firebaseAuthDot" style="background:var(--text-muted);"></span>
+                <span id="firebaseUserStatusText">Вы не авторизованы (данные сохраняются только на этом компьютере)</span>
+              </div>
+              <button class="btn btn-ghost btn-sm" id="firebaseLogoutBtn" style="display:none; color:var(--accent-primary); font-size:0.75rem; padding:2px 8px;">Выйти</button>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:0.76rem;">
+              <span style="color:var(--text-muted);">База данных: <strong>Cloud Firestore</strong> (с офлайн-кешированием)</span>
+              <button class="btn btn-primary btn-sm" id="firebaseManualSyncBtn" style="font-size:0.76rem;">
+                <span>🔄</span> Синхронизировать с Firebase
+              </button>
+            </div>
+          </div>
+
+          <!-- Dedicated WordMagic Sync Server -->
+          <div class="git-card">
+            <div class="git-card-title">
+              <span style="display:flex; align-items:center; gap:8px;">
+                <span>🖥️</span>
+                <strong>Свой локальный / VPS сервер (Python/Docker)</strong>
+              </span>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-ghost btn-sm" id="testServerConnBtn" style="font-size:0.78rem;">🔌 Проверить связь</button>
+                <button class="btn btn-ghost btn-sm" id="syncNowBtn" style="font-size:0.78rem; border:1px solid var(--border-medium);">🔄 Синхронизировать</button>
+              </div>
+            </div>
+            <div style="font-size:0.78rem; color:var(--text-muted); line-height:1.4;">
+              Позволяет синхронизировать все ваши книги, главы, историю ревизий и 7-дневную статистику между Windows, Ubuntu (Linux) и другими устройствами.
+            </div>
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-top:4px;">
+              <div class="git-input-group">
+                <label class="git-input-label">URL сервера (например, http://192.168.1.100:8080 или https://my-server.com):</label>
+                <input type="text" id="serverUrlInput" class="git-text-input" placeholder="http://localhost:8080">
+              </div>
+              <div class="git-input-group">
+                <label class="git-input-label">Ключ доступа (Sync Secret Key):</label>
+                <input type="password" id="serverKeyInput" class="git-text-input" placeholder="Оставьте пустым или введите пароль">
+              </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; border-top:1px dashed var(--border-subtle); padding-top:8px; margin-top:4px;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--text-secondary);">
+                <input type="checkbox" id="serverAutoSyncCheckbox"> Автоматическая фоновая синхронизация (каждые 60 сек)
+              </label>
+              <span id="serverSyncStatusText" style="color:var(--text-muted); font-family:var(--font-mono);">Синхронизация не выполнялась</span>
+            </div>
+          </div>
+
+          <!-- GitHub Credentials -->
+          <div class="git-card">
+            <div class="git-card-title">
+              <span>🐙 Синхронизация с GitHub (Резервная копия репозитория)</span>
+              <button class="btn btn-ghost btn-sm" id="saveGhConfigBtn" style="font-size:0.78rem; border:1px solid var(--border-medium);">Сохранить параметры GitHub</button>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+              <div class="git-input-group">
+                <label class="git-input-label">GitHub Token (Personal Access Token):</label>
+                <input type="password" id="ghTokenInput" class="git-text-input" placeholder="ghp_xxxxxxxxxxxxxx">
+              </div>
+              <div class="git-input-group">
+                <label class="git-input-label">Репозиторий (username/repo):</label>
+                <input type="text" id="ghRepoInput" class="git-text-input" placeholder="myusername/my-prose-book">
+              </div>
+              <div class="git-input-group">
+                <label class="git-input-label">Ветка (Branch):</label>
+                <input type="text" id="ghBranchInput" class="git-text-input" value="main">
+              </div>
+              <div class="git-input-group">
+                <label class="git-input-label">Путь к файлу в репозитории:</label>
+                <input type="text" id="ghPathInput" class="git-text-input" value="prose.md">
+              </div>
+            </div>
+          </div>
+
+          <!-- Commit Form -->
+          <div class="git-card">
+            <div class="git-card-title">Создать коммит / Локальный снапшот</div>
+            <div class="commit-box">
+              <input type="text" id="commitMessageInput" class="commit-msg-input" placeholder="Сообщение коммита (например: Дописал сцену на набережной)...">
+              <button class="btn btn-ghost" id="createLocalSnapshotBtn">Локальный Git снапшот</button>
+              <button class="btn btn-primary" id="pushGitHubBtn">Коммит и Пуш в GitHub</button>
+            </div>
+          </div>
+
+          <!-- Timeline & Diff Grid -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div>
+              <div class="sidebar-section-title" style="padding:0; margin-bottom:8px;">История ревизий и коммитов</div>
+              <ul class="git-timeline" id="gitTimelineList">
+                <!-- Revisions list -->
+              </ul>
+            </div>
+
+            <div>
+              <div class="sidebar-section-title" style="padding:0; margin-bottom:8px;">Визуальный Diff (Сравнение)</div>
+              <div class="diff-container" id="diffContainer">
+                <div class="diff-empty-state">Выберите версию слева и нажмите «Сравнить Diff» для просмотра изменений.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary modal-close-btn">Готово</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 4: Export & Local File System Save
+       ========================================================================= -->
+  <div class="modal-backdrop" id="exportModal">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">💾 Сохранение и Экспорт прозы</h2>
+        <button class="btn btn-ghost btn-icon modal-close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <p style="font-size:0.88rem; color:var(--text-secondary);">
+            Вы можете экспортировать текущую главу или скомпилировать всю книгу в один файл:
+          </p>
+
+          <!-- Export Whole Book -->
+          <button class="btn btn-primary" id="exportFullBookBtn" style="padding:12px; justify-content:flex-start; background: linear-gradient(135deg, var(--accent-primary), #6d281a);">
+            <span style="font-size:1.3rem;">📖</span>
+            <div style="text-align:left;">
+              <strong>Скомпилировать всё произведение целиком (.md)</strong>
+              <div style="font-size:0.75rem; opacity:0.9;">Объединяет все главы текущей книги с оглавлением в один монолитный файл</div>
+            </div>
+          </button>
+
+          <button class="btn btn-ghost" id="exportFsBtn" style="padding:10px; justify-content:flex-start; border:1px solid var(--border-medium);">
+            <span style="font-size:1.2rem;">📂</span>
+            <div style="text-align:left;">
+              <strong>Сохранить текущую главу на диск (File System Access API)</strong>
+              <div style="font-size:0.74rem; color:var(--text-muted);">Прямой выбор файла на компьютере</div>
+            </div>
+          </button>
+
+          <button class="btn btn-ghost" id="exportMdBtn" style="padding:10px; justify-content:flex-start; border:1px solid var(--border-medium);">
+            <span style="font-size:1.1rem;">📝</span>
+            <div style="text-align:left;">
+              <strong>Скачать главу как Markdown (.md)</strong>
+              <div style="font-size:0.74rem; color:var(--text-muted);">Идеально для Obsidian, Notion, GitHub</div>
+            </div>
+          </button>
+
+          <button class="btn btn-ghost" id="exportTxtBtn" style="padding:10px; justify-content:flex-start; border:1px solid var(--border-medium);">
+            <span style="font-size:1.1rem;">📄</span>
+            <div style="text-align:left;">
+              <strong>Скачать простой текст (.txt)</strong>
+              <div style="font-size:0.74rem; color:var(--text-muted);">Чистый текст без форматирования</div>
+            </div>
+          </button>
+
+          <button class="btn btn-ghost" id="exportCopyBtn" style="padding:10px; justify-content:flex-start; border:1px solid var(--border-medium);">
+            <span style="font-size:1.1rem;">📋</span>
+            <div style="text-align:left;">
+              <strong>Скопировать главу в буфер обмена</strong>
+              <div style="font-size:0.74rem; color:var(--text-muted);">Мгновенная вставка в Word, Google Docs или мессенджер</div>
+            </div>
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary modal-close-btn">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 5: Projects / Books Manager
+       ========================================================================= -->
+  <div class="modal-backdrop" id="projectsModal">
+    <div class="modal-container" style="max-width: 680px;">
+      <div class="modal-header">
+        <h2 class="modal-title">📚 Мои произведения и книги</h2>
+        <button class="btn btn-ghost btn-icon modal-close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="newProjectTitleInput" class="git-text-input" placeholder="Название нового произведения (например: «Тени над набережной»)...">
+            <button class="btn btn-primary" id="createNewProjectBtn" style="white-space:nowrap;">+ Создать книгу</button>
+          </div>
+
+          <div>
+            <div class="sidebar-section-title" style="padding:0; margin-bottom:8px;">Список всех книг и рукописей</div>
+            <ul class="doc-list" id="projectsList" style="max-height: 280px; overflow-y: auto;">
+              <!-- Rendered by JS -->
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary modal-close-btn">Готово</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Entrypoint (ES Module) -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
